@@ -42,3 +42,7 @@ Please refer to the bedcmmPitch repository for the terms and conditions of its u
 - Plotly
 - Streamlit
 - bedcmmPitch (separate license)
+
+# Reference
+bedcmmPitch:
+https://github.com/YASUHARA-Wataru/bedcmmPitch
