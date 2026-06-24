@@ -122,14 +122,14 @@ wheels = [
 
 [[package]]
 name = "bedcmmpitch"
-version = "0.2.3"
+version = "0.2.4"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "numpy" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/22/93/efa76f7a12c7c777778e7a7ad0094040469ccd35465ea08e6318e3015152/bedcmmpitch-0.2.3.tar.gz", hash = "sha256:ef3588ed37f3c6dfa99d1f51bddf84d9ad2a20930a05bd4d7f35a93593405a49", size = 371857, upload-time = "2026-06-17T12:02:44.428Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/9d/26/a51560508d0fe6fc7bca3fffc2505ea43121387e2afbdc5092c046721799/bedcmmpitch-0.2.4.tar.gz", hash = "sha256:64239dac8bdebc9205d7cdff556b58809b271d4ea90f6ad4235aaf00e0a9721a", size = 372580, upload-time = "2026-06-24T14:16:46.782Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/da/37/d91cf2011545b1be69a45b92f172acbd5bfa16ead42b1b1168e6404aae16/bedcmmpitch-0.2.3-cp311-cp311-win_amd64.whl", hash = "sha256:9f724a76287133a13f48d67478fc1e219f1bb5e3252dac2dac74b4bb712542ba", size = 427369, upload-time = "2026-06-17T12:02:43.414Z" },
+    { url = "https://files.pythonhosted.org/packages/e9/66/19e6cc235331ae53f39dba8a0d499ce14bb9a5781a50c6774babe76cb622/bedcmmpitch-0.2.4-cp311-cp311-win_amd64.whl", hash = "sha256:98a3349076794e887d6b69648649186fd1e6da3547960a31ba5d8e96cf20cbbf", size = 428655, upload-time = "2026-06-24T14:16:45.673Z" },
 ]
 
 [[package]]
@@ -896,7 +896,7 @@ dependencies = [
 
 [package.metadata]
 requires-dist = [
-    { name = "bedcmmpitch", specifier = ">=0.2.3" },
+    { name = "bedcmmpitch", specifier = ">=0.2.4" },
     { name = "librosa", specifier = ">=0.11.0" },
     { name = "numpy", specifier = ">=2.4.6" },
     { name = "plotly", specifier = ">=6.8.0" },
