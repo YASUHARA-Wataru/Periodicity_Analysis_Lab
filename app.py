@@ -16,7 +16,7 @@ st.markdown(
     ### Available Pages
 
     - Pitch Detection Lab
-    - Pitch Tracking Lab (Coming Soon)
+    - Pitch Tracking Lab
     - Periodicity Explorer (Coming Soon)
 
     Select a page from the sidebar.

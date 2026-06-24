@@ -186,6 +186,11 @@ save_wav(
         ),
         harmonic_signal(
             440,
+            2.0,
+            (1.0,0.5)
+        ),
+        harmonic_signal(
+            220,
             2.5,
             (1.0,0.5)
         )

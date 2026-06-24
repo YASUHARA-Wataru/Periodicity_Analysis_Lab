@@ -24,3 +24,20 @@ class AnalysisResult:
     bedcmm_freq:np.ndarray
 
     frame_results: list[FrameResult]
+
+@dataclass
+class AnalysisResult_Tracking:
+
+    waveform: np.ndarray
+    fs: int
+    window_size: int
+    hop_size: int
+    peroid_times: np.ndarray
+    yin_freq:np.ndarray
+    pyin_freq:np.ndarray
+    bedcmm_freq:np.ndarray
+    bedcmm_bayes_freq:np.ndarray
+    bedcmm_viterbi_freq:np.ndarray
+
+    bedcmm_score_map:np.ndarray
+    yin_score_map:np.ndarray

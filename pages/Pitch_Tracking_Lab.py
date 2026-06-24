@@ -5,16 +5,15 @@ from plotly.subplots import make_subplots
 from src.audio import load_audio
 from src.config import AnalysisConfig
 from src.result import FrameResult
-from src.analyze import analyze_audio
+from src.analyze import analyze_audio_tracking
 from src.plot import create_method_plot,create_waveform_plot
 
-
 st.set_page_config(
-    page_title="Pitch Detection Lab",
+    page_title="Pitch Tracking Lab",
     layout="wide"
 )
 
-st.title("Pitch Detection Lab")
+st.title("Pitch Tracking Lab")
 
 
 # =====================================================
@@ -22,9 +21,7 @@ st.title("Pitch Detection Lab")
 # =====================================================
 
 if "loaded" not in st.session_state:
-    st.session_state.loaded = False
-
-
+    st.session_state.loaded_tracking = False
 
 
 def create_pitch_track_plot(current_time,results:FrameResult):
@@ -33,37 +30,20 @@ def create_pitch_track_plot(current_time,results:FrameResult):
 
     fig = go.Figure()
 
-    fig.add_trace(
-        go.Scatter(
-            x=x,
-            y=results.fft_max_freq,
-            name="FFT",
-        )
-    )
+    fig.add_trace(go.Scatter(x=x, y=results.bedcmm_freq,
+                             name="bedcmm"))
 
-    fig.add_trace(
-        go.Scatter(
-            x=x,
-            y=results.bedcmm_freq,
-            name="bedcmm",
-        )
-    )
+    fig.add_trace(go.Scatter(x=x, y=results.bedcmm_bayes_freq,
+                             name="Bayes"))
 
-    fig.add_trace(
-        go.Scatter(
-            x=x,
-            y=results.yin_freq,
-            name="YIN",
-        )
-    )
+    fig.add_trace(go.Scatter(x=x, y=results.bedcmm_viterbi_freq,
+                             name="Viterbi"))
 
-    fig.add_trace(
-        go.Scatter(
-            x=x,
-            y=results.ac_max_freq,
-            name="Autocorrelation",
-        )
-    )
+    fig.add_trace(go.Scatter(x=x, y=results.yin_freq,
+                             name="YIN"))
+
+    fig.add_trace(go.Scatter(x=x, y=results.pyin_freq,
+                             name="pYIN"))
 
     fig.add_vline(
         x=(current_time - 1/results.fs*results.hop_size),
@@ -71,26 +51,63 @@ def create_pitch_track_plot(current_time,results:FrameResult):
     )
 
     fig.update_layout(
-        height=250,
-        margin=dict(
-            l=10,
-            r=10,
-            t=10,
-            b=10,
-        ),
-        legend=dict(
-            orientation="h"
-        )
+        height=350,
+        title="Pitch Tracking Comparison"
     )
 
     return fig
+
+def create_heatmap(score_map, periods, tracks, names, title,time_axis):
+
+    fig = go.Figure()
+    t = time_axis
+
+    fig.add_trace(
+        go.Heatmap(
+            z=score_map.T,
+            x=t,
+            y=periods,
+            colorscale="gray"
+        )
+    )
+
+
+    for y, name in zip(tracks, names):
+
+        fig.add_trace(
+            go.Scatter(
+                x=t,
+                y=y,
+                mode="lines",
+                name=name
+            )
+        )
+
+    fig.update_layout(
+        legend=dict(
+            orientation="h",
+            yanchor="bottom",
+            y=1.02,
+            xanchor="left",
+            x=0
+        )
+    )
+
+    fig.update_layout(
+        height=400,
+        title=title
+    )
+
+    return fig
+
+
 
 
 # =====================================================
 # Top Controls
 # =====================================================
 
-col_source, col_setting = st.columns(2)
+col_source, col_setting1,col_setting2 = st.columns(3)
 
 with col_source:
 
@@ -131,7 +148,7 @@ with col_source:
         )
 
 
-with col_setting:
+with col_setting1:
 
     st.subheader("Analysis Settings")
 
@@ -159,12 +176,44 @@ with col_setting:
         min_value=1.0,
     )
 
-    analysis_config = AnalysisConfig(window_size=window_size,
+with col_setting2:
+
+    st.subheader("Analysis Settings")
+
+    st.subheader("Bayes Tracking")
+
+    alpha = st.number_input(
+        "alpha",
+        value=0.7
+    )
+
+    bayes_sigma = st.number_input(
+        "bayes_sigma",
+        value=0.1
+    )
+
+    st.subheader("Viterbi Tracking")
+
+    beta = st.number_input(
+        "beta",
+        value=10.0
+    )
+
+    viterbi_sigma = st.number_input(
+        "viterbi_sigma",
+        value=0.1
+    )
+
+    analysis_config_tracking = AnalysisConfig(window_size=window_size,
                                      hop_size=hop_size,
                                      min_f0=min_f0,
-                                     max_f0=max_f0)
+                                     max_f0=max_f0,
+                                     bayes_alpha=alpha,
+                                     bayes_sigma=bayes_sigma,
+                                     viterbi_beta=beta,
+                                     viterbi_sigma=viterbi_sigma)
 
-    st.session_state.analysis_config = analysis_config
+    st.session_state.analysis_config_tracking = analysis_config_tracking
 
 st.divider()
 
@@ -221,13 +270,13 @@ if st.button(
 
         if source_type == "Sample Data":
 
-            st.session_state.wave_path = selected_path
+            st.session_state.wave_path_tracking = selected_path
 
         else:
 
-            st.session_state.wave_path = uploaded_file
+            st.session_state.wave_path_tracking = uploaded_file
 
-        y,sr = load_audio(st.session_state.wave_path)
+        y,sr = load_audio(st.session_state.wave_path_tracking)
 
         MAX_DURATION = 10.0
 
@@ -246,35 +295,35 @@ if st.button(
             st.stop()
 
         st.write("Analyze audio file...")
-        results = analyze_audio(y,sr,st.session_state.analysis_config)
-        st.session_state.results = results
+        results = analyze_audio_tracking(y,sr,st.session_state.analysis_config_tracking)
+        st.session_state.results_tracking = results
 
         status.update(
             label="Analysis Complete",
             state="complete",
         )
 
-    st.session_state.loaded = True
+    st.session_state.loaded_tracking = True
 
 # =====================================================
 # Analysis Area
 # =====================================================
 
-if st.session_state.loaded:
+if st.session_state.loaded_tracking:
     
     st.audio(
-        st.session_state.wave_path
+        st.session_state.wave_path_tracking
     )
 
     st.divider()
 
     st.caption(
-        f"Window:{st.session_state.analysis_config.window_size}  "
-        f"Hop:{st.session_state.analysis_config.hop_size}  "
-        f"F0:{st.session_state.analysis_config.min_f0:.0f}-{st.session_state.analysis_config.max_f0:.0f}Hz"
+        f"Window:{st.session_state.analysis_config_tracking.window_size}  "
+        f"Hop:{st.session_state.analysis_config_tracking.hop_size}  "
+        f"F0:{st.session_state.analysis_config_tracking.min_f0:.0f}-{st.session_state.analysis_config_tracking.max_f0:.0f}Hz"
     )
 
-    results = st.session_state.results
+    results = st.session_state.results_tracking
     audio_len_sec = len(results.waveform)/results.fs
     audio_step = results.hop_size/results.fs
     max_value_minus = results.window_size/results.fs
@@ -292,19 +341,49 @@ if st.session_state.loaded:
         width='stretch',
     )
 
+    st.markdown("### Pitch Track Comparison")
+
+    st.plotly_chart(
+        create_pitch_track_plot(current_time,results),
+        width='stretch',
+    )
+    st.divider()
+    time_axis = np.arange(
+    0,
+    len(results.waveform)/results.fs,
+    results.hop_size/results.fs
+    )
+    track_names_list = ['bedcmm','bedcmm bayes','bedcmm viterbi']
+    tracks = [1/results.bedcmm_freq,
+              1/results.bedcmm_bayes_freq,
+              1/results.bedcmm_viterbi_freq]
+    st.plotly_chart(
+        create_heatmap(results.bedcmm_score_map,results.peroid_times, tracks,track_names_list,'bedcmm score map',time_axis),
+        width='stretch',
+    )
+
     st.divider()
 
+    track_names_list = ['YIN','pYIN']
+    tracks = [1/results.yin_freq,
+              1/results.pyin_freq,
+              ]
+    st.plotly_chart(
+        create_heatmap(results.yin_score_map,results.peroid_times, tracks,track_names_list,'YIN score map',time_axis),
+        width='stretch',
+    )
+
+
+    st.divider()
     st.markdown("### Wave Analysis(FT and Periodicity)")
 
-    fft_col, bed_col, yin_col, ac_col = st.columns(4)
+    bed_col, yin_col = st.columns(2)
     frame_idx = int(
         current_time * results.fs / results.hop_size
     )
     methods = [
-        ("FFT", fft_col,results.frame_results[frame_idx].fft_score,results.fft_max_freq[frame_idx]),
-        ("bedcmm", bed_col,results.frame_results[frame_idx].bedcmm_score,results.bedcmm_freq[frame_idx]),
-        ("YIN(CMNDF)", yin_col,results.frame_results[frame_idx].yin_score,results.yin_freq[frame_idx]),
-        ("Autocorrelation", ac_col,results.frame_results[frame_idx].ac_score,results.ac_max_freq[frame_idx]),
+        ("bedcmm", bed_col,results.bedcmm_score_map[frame_idx],results.bedcmm_freq[frame_idx]),
+        ("YIN(CMNDF)", yin_col,results.yin_score_map[frame_idx],results.yin_freq[frame_idx]),
     ]
 
 
@@ -326,13 +405,6 @@ if st.session_state.loaded:
             )
 
     st.divider()
-
-    st.markdown("### Pitch Track Comparison")
-
-    st.plotly_chart(
-        create_pitch_track_plot(current_time,results),
-        width='stretch',
-    )
 
 else:
 

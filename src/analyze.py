@@ -2,6 +2,7 @@ import numpy as np
 from src.result import (
     AnalysisResult,
     FrameResult,
+    AnalysisResult_Tracking,
 )
 from src.config import AnalysisConfig
 from src.periodicity import calc_fft,calc_yin_cmndf,calc_autocorrelation,get_fft_freqs,get_peroid_times
@@ -65,4 +66,50 @@ def analyze_audio(y, fs,AnalysisConfig:AnalysisConfig):
         ac_max_freq=ac_max_freq_list,
         yin_freq=yin_freq_list,
         bedcmm_freq=bedcmm_freq_list
+    )
+
+def analyze_audio_tracking(y, fs,AnalysisConfig:AnalysisConfig):
+
+    frame_results = []
+
+    window_size = AnalysisConfig.window_size
+    hop_size = AnalysisConfig.hop_size
+    fmin = AnalysisConfig.min_f0
+    fmax = AnalysisConfig.max_f0
+    bayes_alpha = AnalysisConfig.bayes_alpha
+    bayes_sigma = AnalysisConfig.bayes_sigma
+    viterbi_beta = AnalysisConfig.viterbi_beta
+    viterbi_sigma = AnalysisConfig.viterbi_sigma
+    frames = np.arange(window_size,len(y),hop_size)
+
+    peroid_times = get_peroid_times(window_size,fs,fmin,fmax)
+
+    yin_freq_list = librosa.yin(y=y,sr=fs,fmin=fmin,fmax=fmax,frame_length=window_size,hop_length=hop_size,center=False)
+    pyin_freq_list,_,_ = librosa.pyin(y=y,sr=fs,fmin=fmin,fmax=fmax,frame_length=window_size,hop_length=hop_size,center=False)
+
+    bedcmm_score_list,_ = bedcmmPitch.calc_bedcmm(y,fs=fs,window_size=window_size,hop_size=hop_size,fmin=fmin,fmax=fmax)
+    bedcmm_freq_list,_ = bedcmmPitch.calc_Pitch(y,fs=fs,window_size=window_size,hop_size=hop_size,fmin=fmin,fmax=fmax)
+    bedcmm_bayes_freq_list,_,_ = bedcmmPitch.calc_Pitch_with_bayes(y,fs=fs,alpha=bayes_alpha,sigma=bayes_sigma,window_size=window_size,hop_size=hop_size,fmin=fmin,fmax=fmax)
+    bedcmm_viterbi_freq_list,_,_ = bedcmmPitch.calc_Pitch_with_viterbi(y,fs=fs,beta=viterbi_beta,sigma=viterbi_sigma,window_size=window_size,hop_size=hop_size,fmin=fmin,fmax=fmax)
+    yin_score_list = []
+
+    for frame in frames:
+        y_frame = y[frame-window_size:frame]
+
+        yin_score = calc_yin_cmndf(y_frame,fs,fmin,fmax)
+        yin_score_list.append(yin_score)
+
+    return AnalysisResult_Tracking(
+        waveform=y,
+        fs=fs,
+        window_size=window_size,
+        hop_size=hop_size,
+        peroid_times=peroid_times,
+        yin_freq=yin_freq_list,
+        pyin_freq=pyin_freq_list,
+        yin_score_map=np.array(yin_score_list),
+        bedcmm_freq=bedcmm_freq_list,
+        bedcmm_bayes_freq=bedcmm_bayes_freq_list,
+        bedcmm_viterbi_freq=bedcmm_viterbi_freq_list,
+        bedcmm_score_map=bedcmm_score_list,
     )
