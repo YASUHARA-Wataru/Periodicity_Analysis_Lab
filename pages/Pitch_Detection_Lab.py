@@ -1,7 +1,6 @@
 import streamlit as st
 import numpy as np
 import plotly.graph_objects as go
-from plotly.subplots import make_subplots
 from src.audio import load_audio
 from src.config import AnalysisConfig
 from src.result import FrameResult
