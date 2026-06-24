@@ -375,15 +375,15 @@ if st.session_state.loaded_tracking:
 
 
     st.divider()
-    st.markdown("### Wave Analysis(FT and Periodicity)")
+    st.markdown("### Wave Analysis(Periodicity)")
 
     bed_col, yin_col = st.columns(2)
     frame_idx = int(
         current_time * results.fs / results.hop_size
     )
     methods = [
-        ("bedcmm", bed_col,results.bedcmm_score_map[frame_idx],results.bedcmm_freq[frame_idx]),
-        ("YIN(CMNDF)", yin_col,results.yin_score_map[frame_idx],results.yin_freq[frame_idx]),
+        ("bedcmm(viterbi)", bed_col,results.bedcmm_score_map[frame_idx],results.bedcmm_viterbi_freq[frame_idx]),
+        ("pYIN(CMNDF)", yin_col,results.yin_score_map[frame_idx],results.pyin_freq[frame_idx]),
     ]
 
 
