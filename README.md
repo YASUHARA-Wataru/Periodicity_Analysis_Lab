@@ -75,13 +75,13 @@ The goal of this project is not only to compare the final pitch estimates, but a
 ### Example Views
 
 * Pitch Tracking Comparison
-![pic_6](pic/Pitch_Tracking_Lab1.png)
+![pic_6](./pic/Pitch_Tracking_Lab1.png)
 * bedcmm Score Map
-![pic_6](pic/Pitch_Tracking_Lab2.png)
+![pic_7](./pic/Pitch_Tracking_Lab2.png)
 * YIN Score Map
-![pic_6](pic/Pitch_Tracking_Lab3.png)
+![pic_8](./pic/Pitch_Tracking_Lab3.png)
 * Current Frame Analysis
-![pic_6](pic/Pitch_Tracking_Lab4.png)
+![pic_9](./pic/Pitch_Tracking_Lab4.png)
 
 
 ### Related Algorithms
